@@ -21,7 +21,7 @@ def test_qdrant(content_payload_key: str, metadata_payload_key: str) -> None:
     docsearch = Qdrant.from_texts(
         texts,
         FakeEmbeddings(),
-        host="localhost",
+        location=":memory:",
         content_payload_key=content_payload_key,
         metadata_payload_key=metadata_payload_key,
     )
@@ -48,12 +48,26 @@ def test_qdrant_with_metadatas(
         texts,
         FakeEmbeddings(),
         metadatas=metadatas,
-        host="localhost",
+        location=":memory:",
         content_payload_key=content_payload_key,
         metadata_payload_key=metadata_payload_key,
     )
     output = docsearch.similarity_search("foo", k=1)
     assert output == [Document(page_content="foo", metadata={"page": 0})]
+
+
+def test_qdrant_similarity_search_filters() -> None:
+    """Test end to end construction and search."""
+    texts = ["foo", "bar", "baz"]
+    metadatas = [{"page": i} for i in range(len(texts))]
+    docsearch = Qdrant.from_texts(
+        texts,
+        FakeEmbeddings(),
+        metadatas=metadatas,
+        location=":memory:",
+    )
+    output = docsearch.similarity_search("foo", k=1, filter={"page": 1})
+    assert output == [Document(page_content="bar", metadata={"page": 1})]
 
 
 @pytest.mark.parametrize(
@@ -75,7 +89,7 @@ def test_qdrant_max_marginal_relevance_search(
         texts,
         FakeEmbeddings(),
         metadatas=metadatas,
-        host="localhost",
+        location=":memory:",
         content_payload_key=content_payload_key,
         metadata_payload_key=metadata_payload_key,
     )
